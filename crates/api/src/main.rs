@@ -9,13 +9,20 @@ async fn health() -> &'static str {
 
 #[tokio::main]
 async fn main() {
+    let cfg = config::load("configs/example.toml")
+        .expect("failed to load config");
+
+    println!("Loaded config:");
+    println!("{:#?}", cfg);
+
     let app = Router::new()
         .route("/health", get(health));
 
-    let listener =
-        tokio::net::TcpListener::bind("127.0.0.1:3000")
-            .await
-            .unwrap();
+    let listener = tokio::net::TcpListener::bind(
+        "127.0.0.1:3000",
+    )
+    .await
+    .unwrap();
 
     println!("API listening on 3000");
 
