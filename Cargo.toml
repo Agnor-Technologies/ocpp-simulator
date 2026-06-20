@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "crates/shared-types",
+    "crates/config",
+    "crates/simulator",
+    "crates/api",
+]
