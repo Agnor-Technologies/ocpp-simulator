@@ -1,0 +1,8 @@
+id = "chargerid"
+
+cms = "electrodot"
+profile = "abb"
+
+token = ""
+
+requested_port = 1236

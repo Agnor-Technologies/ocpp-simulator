@@ -1,0 +1,9 @@
+name = "ABB Terra"
+
+vendor = "ABB"
+model = "CDT_TACW22::NET_WIFI"
+
+max_offer = 16
+min_to_start = 6
+
+metervalues_interval = 30

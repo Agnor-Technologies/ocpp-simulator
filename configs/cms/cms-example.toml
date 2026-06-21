@@ -1,0 +1,5 @@
+name = "CMS_name"
+
+base_url = "wss://"
+
+http_auth = false

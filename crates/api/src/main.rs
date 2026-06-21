@@ -9,11 +9,30 @@ async fn health() -> &'static str {
 
 #[tokio::main]
 async fn main() {
-    let cfg = config::load("configs/example.toml")
-        .expect("failed to load config");
+    let configs = config::ConfigManager::load("configs")
+        .expect("failed to load configs");
 
-    println!("Loaded config:");
-    println!("{:#?}", cfg);
+    println!("Loaded configs:");
+    println!("{:#?}", configs);
+
+    let mut manager =
+        simulator::manager::SimulatorManager::new();
+
+    for resolved in configs.resolve_all().unwrap() {
+        manager.add_instance(resolved);
+    }
+
+    println!("Loaded simulator instances:");
+    println!("{:#?}", manager);
+
+    for instance in configs.instances.values() {
+        manager
+        .start_instance(&instance.id)
+        .unwrap();
+    }
+
+    println!("Started instance:");
+
 
     let app = Router::new()
         .route("/health", get(health));
