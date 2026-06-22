@@ -4,6 +4,9 @@ use crate::state::ChargerState;
 pub async fn run(
     config: ResolvedInstance,
 ) {
+    crate::cms::connect(&config)
+    .await
+    .unwrap();
     loop {
         println!(
             "{} state={:?}",

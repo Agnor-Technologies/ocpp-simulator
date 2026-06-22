@@ -6,6 +6,7 @@ use crate::state::ChargerState;
 pub enum InstanceStatus {
     Stopped,
     Starting,
+    Connecting,
     Running,
     Error(String),
 }
