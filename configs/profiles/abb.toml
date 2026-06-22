@@ -3,6 +3,14 @@ name = "ABB Terra"
 vendor = "ABB"
 model = "CDT_TACW22::NET_WIFI"
 
+firmware_version = "TAC3Z91180710247::V1.8.21"
+
+iccid = ""
+imsi = ""
+
+meter_type = "AVT NQC-ACDC"
+meter_serial_number = "avt.001.13.1.01"
+
 max_offer = 16
 min_to_start = 6
 

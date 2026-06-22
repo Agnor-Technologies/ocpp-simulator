@@ -1,5 +1,5 @@
 name = "CMS_name"
 
-base_url = "wss://"
+base_url = "wss://just-the-domain"
 
 http_auth = false

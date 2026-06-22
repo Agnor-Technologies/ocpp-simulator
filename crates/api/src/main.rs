@@ -1,3 +1,5 @@
+use rustls::crypto::ring;
+
 use axum::{
     routing::get,
     Router,
@@ -9,6 +11,10 @@ async fn health() -> &'static str {
 
 #[tokio::main]
 async fn main() {
+    ring::default_provider()
+    .install_default()
+    .expect("failed to install rustls provider");
+
     let configs = config::ConfigManager::load("configs")
         .expect("failed to load configs");
 

@@ -1,3 +1,7 @@
+rustls::crypto::ring::default_provider()
+.install_default()
+.expect("failed to install rustls provider");
+
 let mut manager =
     simulator::manager::SimulatorManager::new();
 

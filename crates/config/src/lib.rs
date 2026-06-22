@@ -16,10 +16,21 @@ pub struct CmsConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProfileConfig {
     pub name: String,
+
     pub vendor: String,
     pub model: String,
+
+    pub firmware_version: String,
+
+    pub iccid: String,
+    pub imsi: String,
+
+    pub meter_type: String,
+    pub meter_serial_number: String,
+
     pub max_offer: u32,
     pub min_to_start: u32,
+
     pub metervalues_interval: u64,
 }
 
