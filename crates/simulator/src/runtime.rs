@@ -22,39 +22,10 @@ pub async fn run(
         }
     };
 
-    let boot = serde_json::json!([
-        2,
-        "boot-1",
-        "BootNotification",
-        {
-            "chargePointVendor":
-            config.profile.vendor,
-
-            "chargePointModel":
-            config.profile.model,
-
-            "chargePointSerialNumber":
-            config.instance.id,
-
-            "chargeBoxSerialNumber":
-            config.instance.id,
-
-            "firmwareVersion":
-            config.profile.firmware_version,
-
-            "iccid":
-            config.profile.iccid,
-
-            "imsi":
-            config.profile.imsi,
-
-            "meterType":
-            config.profile.meter_type,
-
-            "meterSerialNumber":
-            config.profile.meter_serial_number
-        }
-    ]);
+    let boot =
+    crate::ocpp::boot_notification::build(
+        &config
+    );
 
     println!(
         "{} sending BootNotification",
@@ -110,11 +81,150 @@ pub async fn run(
                 }
 
                 Some(Ok(Message::Text(text))) => {
+                    let value: serde_json::Value =
+                    match serde_json::from_str(&text) {
+                        Ok(v) => v,
+                        Err(err) => {
+                            eprintln!(
+                                "{} invalid JSON: {}",
+                                config.instance.id,
+                                err,
+                            );
+
+                            continue;
+                        }
+                    };
+
                     println!(
-                        "{} FRAME: Text({})",
-                             config.instance.id,
-                             text,
+                        "{} OCPP: {:#}",
+                        config.instance.id,
+                        value,
                     );
+
+                    let Some(array) =
+                    value.as_array()
+                    else {
+                        continue;
+                    };
+
+                    if array.len() < 3 {
+                        continue;
+                    }
+
+                    let message_type =
+                    array[0].as_i64().unwrap_or(0);
+
+                    println!(
+                        "{} OCPP message type: {}",
+                        config.instance.id,
+                        message_type,
+                    );
+
+                    if message_type == 2 {
+                        let message_id =
+                        array[1]
+                        .as_str()
+                        .unwrap_or("");
+
+                        let action =
+                        array[2]
+                        .as_str()
+                        .unwrap_or("");
+
+                        println!(
+                            "{} OCPP action: {}",
+                            config.instance.id,
+                            action,
+                        );
+
+                        match action {
+                            "TriggerMessage" => {
+                                let connector_id =
+                                array[3]
+                                ["connectorId"]
+                                .as_u64()
+                                .unwrap_or(1)
+                                as u8;
+
+                                let requested =
+                                array[3]
+                                ["requestedMessage"]
+                                .as_str()
+                                .unwrap_or("");
+
+                                println!(
+                                    "{} TriggerMessage: {}",
+                                    config.instance.id,
+                                    requested,
+                                );
+
+                                let response =
+                                serde_json::json!([
+                                    3,
+                                    message_id,
+                                    {
+                                        "status":
+                                        "Accepted"
+                                    }
+                                ]);
+
+                                println!(
+                                    "{} sending TriggerMessage response",
+                                    config.instance.id,
+                                );
+
+                                socket
+                                .send(
+                                    Message::Text(
+                                        response
+                                        .to_string()
+                                        .into(),
+                                    ),
+                                )
+                                .await
+                                .unwrap();
+
+                                if requested
+                                    == "StatusNotification"
+                                    {
+                                        let status =
+                                        crate::ocpp::status_notification::build(
+                                            connector_id,
+                                            crate::ocpp::types::ChargePointStatus::Available,
+                                        );
+
+                                        println!(
+                                            "{} sending StatusNotification",
+                                            config.instance.id,
+                                        );
+
+                                        println!(
+                                            "{}",
+                                            status,
+                                        );
+
+                                        socket
+                                        .send(
+                                            Message::Text(
+                                                status
+                                                .to_string()
+                                                .into(),
+                                            ),
+                                        )
+                                        .await
+                                        .unwrap();
+                                    }
+                            }
+
+                            _ => {
+                                println!(
+                                    "{} unhandled action: {}",
+                                    config.instance.id,
+                                    action,
+                                );
+                            }
+                        }
+                    }
                 }
 
                 Some(Ok(Message::Binary(data))) => {
