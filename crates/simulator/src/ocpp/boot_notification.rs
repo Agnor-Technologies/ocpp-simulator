@@ -3,10 +3,11 @@ use serde_json::Value;
 
 pub fn build(
     config: &ResolvedInstance,
+    message_id: &str,
 ) -> Value {
     serde_json::json!([
         2,
-        crate::ocpp::message_id::next(),
+        message_id,
         "BootNotification",
         {
             "chargePointVendor":

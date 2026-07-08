@@ -22,9 +22,13 @@ pub async fn run(
         }
     };
 
+    let boot_id =
+    crate::ocpp::message_id::next();
+
     let boot =
     crate::ocpp::boot_notification::build(
-        &config
+        &config,
+        &boot_id,
     );
 
     println!(
@@ -100,6 +104,84 @@ pub async fn run(
                         config.instance.id,
                         value,
                     );
+
+                    if let Some(array) = value.as_array() {
+                        if array.len() >= 3 {
+                            let message_type =
+                            array[0].as_i64().unwrap_or(0);
+
+                            if message_type == 3 {
+                                let reply_id =
+                                array[1].as_str().unwrap_or("");
+
+                                if reply_id == boot_id {
+                                    let status =
+                                    array[2]["status"]
+                                    .as_str()
+                                    .unwrap_or("Unknown");
+
+                                    println!(
+                                        "{} BootNotification status: {}",
+                                        config.instance.id,
+                                        status,
+                                    );
+
+                                    if status != "Accepted" {
+                                        eprintln!(
+                                            "{} BootNotification rejected",
+                                            config.instance.id,
+                                        );
+
+                                        break;
+                                    }
+
+                                    let interval =
+                                    array[2]["interval"]
+                                    .as_u64()
+                                    .unwrap_or(60);
+
+                                    println!(
+                                        "{} heartbeat interval: {}s",
+                                        config.instance.id,
+                                        interval,
+                                    );
+
+                                    // Start heartbeat loop
+                                    loop {
+                                        tokio::time::sleep(
+                                            std::time::Duration::from_secs(interval),
+                                        )
+                                        .await;
+
+                                        let heartbeat =
+                                        crate::ocpp::heartbeat::build();
+
+                                        println!(
+                                            "{} sending Heartbeat",
+                                            config.instance.id,
+                                        );
+
+                                        if let Err(err) = socket
+                                            .send(
+                                                Message::Text(
+                                                    heartbeat.to_string().into(),
+                                                ),
+                                            )
+                                            .await
+                                            {
+                                                eprintln!(
+                                                    "{} heartbeat failed: {}",
+                                                    config.instance.id,
+                                                    err,
+                                                );
+
+                                                break;
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     if let Err(err) =
                         crate::ocpp::dispatcher::handle(
